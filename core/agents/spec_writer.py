@@ -123,7 +123,7 @@ class SpecWriter(BaseAgent):
         await self.ui.send_front_logs_headers("specs_0", ["E1 / T1", "Writing Specification", "working"], "")
 
         await self.send_message(
-            "## Write specification\n\nPythagora is generating a detailed specification for app based on your input.",
+            "## 编写规范\n\nPythagora正在根据您的输入生成一份详细的应用程序规范.",
             # project_state_id="setup",
         )
 
@@ -186,7 +186,7 @@ class SpecWriter(BaseAgent):
                 await self.ui.send_project_stage({"stage": ProjectStage.SPECS_FINISHED})
                 break
             elif user_done_with_description.button == "no":
-                await self.send_message("## What would you like to add?")
+                await self.send_message("## 你想添加些什么?")
                 user_add_to_spec = await self.ask_question(
                     "What would you like to add?",
                     allow_empty=False,
@@ -194,7 +194,7 @@ class SpecWriter(BaseAgent):
             else:
                 user_add_to_spec = user_done_with_description
 
-            await self.send_message("## Refining specification\n\nPythagora is refining the specs based on your input.")
+            await self.send_message("## 完善规范说明\n\nPythagora正在根据你的输入完善规范说明.")
             # if user edits the spec with extension, it will be commited to db immediately, so we have to check if the description has changed
             if current_description != self.current_state.specification.description:
                 convo = AgentConvo(self).template(
@@ -311,7 +311,7 @@ class SpecWriter(BaseAgent):
             feature_description = self.prev_response.data["description"]
 
         await self.send_message(
-            f"Making the following changes to project specification:\n\n{feature_description}\n\nUpdated project specification:"
+            f"对项目规范做出如下修改:\n\n{feature_description}\n\n更新后的项目规范:"
         )
         llm = self.get_llm(SPEC_WRITER_AGENT_NAME, stream_output=True, route="forwardToCenter")
         convo = AgentConvo(self).template("add_new_feature", feature_description=feature_description)
@@ -344,7 +344,7 @@ class SpecWriter(BaseAgent):
 
     async def check_prompt_complexity(self, prompt: str) -> str:
         is_feature = self.current_state.epics and len(self.current_state.epics) > 2
-        await self.send_message("Checking the complexity of the prompt...\n")
+        await self.send_message("检查提示词的复杂度...\n")
         llm = self.get_llm(SPEC_WRITER_AGENT_NAME)
         convo = AgentConvo(self).template(
             "prompt_complexity",
