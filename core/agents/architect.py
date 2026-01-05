@@ -123,16 +123,16 @@ class Architect(BaseAgent):
 
     async def select_templates(self, spec: Specification) -> tuple[str, dict[ProjectTemplateEnum, Any]]:
         """
-        Select project template(s) to use based on the project description.
+       根据项目描述选择要使用的项目模板.
 
-        Although the Pythagora database models support multiple projects, this
-        function will choose at most one project template, as we currently don't
-        have templates that could be used together in a single project.
+        尽管Pythagora数据库模型支持多个项目，
+        但此函数最多只会选择一个项目模板，
+        因为目前我们没有可在单个项目中一起使用的模板.
 
-        :param spec: Project specification.
-        :return: Dictionary of selected project templates.
+        :param spec: 项目规范说明.
+        :return: 所选项目模板字典.
         """
-        await self.send_message("Selecting starter templates ...")
+        await self.send_message("选择入门模板 ...")
 
         llm = self.get_llm()
         convo = (
@@ -171,10 +171,10 @@ class Architect(BaseAgent):
         return tpl.architecture, templates
 
     async def plan_architecture(self, spec: Specification):
-        await self.send_message("Planning project architecture ...")
+        await self.send_message("规划项目架构 ...")
         architecture_description, templates = await self.select_templates(spec)
 
-        await self.send_message("Picking technologies to use ...")
+        await self.send_message("选择要使用的技术 ...")
 
         llm = self.get_llm(stream_output=True)
         convo = (
@@ -246,39 +246,38 @@ class Architect(BaseAgent):
         deps = spec.system_dependencies
 
         for dep in deps:
-            await self.send_message(f"Checking if {dep['name']} is available ...")
+            await self.send_message(f"正在检查 {dep['name']} 是否可用 ...")
             status_code, _, _ = await self.process_manager.run_command(dep["test"])
             dep["installed"] = bool(status_code == 0)
             if status_code != 0:
                 if dep["required_locally"]:
-                    remedy = "Please install it before proceeding with your app."
+                    remedy = "请在继续使用您的应用程序之前安装它."
                 else:
                     remedy = "If you would like to use it locally, please install it before proceeding."
-                await self.send_message(f"❌ {dep['name']} is not available. {remedy}")
+                await self.send_message(f"❌ {dep['name']} 不可用. {remedy}")
                 await self.ask_question(
-                    f"Have you installed {dep['name']}?",
-                    buttons={"continue": f"I've installed {dep['name']}"},
+                    f"你是否安装了 {dep['name']}?",
+                    buttons={"continue": f"我已经安装了 {dep['name']}"},
                     buttons_only=True,
                     default="continue",
                 )
 
             else:
-                await self.send_message(f"✅ {dep['name']} is available.")
+                await self.send_message(f"✅ {dep['name']} 是可用的.")
 
     async def configure_template(self, spec: Specification, template_class: BaseProjectTemplate) -> BaseModel:
         """
-        Ask the LLM to configure the template options.
+        让大语言模型配置模板选项.
 
-        Based on the project description, the LLM should pick the options that
-        make the most sense. If template has no options, the method is a no-op
-        and returns an empty options model.
+        根据项目描述，大语言模型应选择最合理的选项。
+        如果模板没有选项，该方法则不执行任何操作，并返回一个空的选项模型.
 
-        :param spec: Project specification.
-        :param template_class: Template that needs to be configured.
-        :return: Configured options model.
+        :param spec: 项目规范.
+        :param template_class: 需要配置的模板.
+        :return: 已配置的选项模型.
         """
         if template_class.options_class is NoOptions:
-            # If template has no options, no need to ask LLM for anything
+            # 如果模板没有选项，就不需要向 LLM 询问任何事情
             return NoOptions()
 
         llm = self.get_llm(stream_output=True)
