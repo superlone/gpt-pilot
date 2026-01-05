@@ -60,7 +60,7 @@ class Frontend(FileDiffMixin, GitMixin, BaseAgent):
 
     async def start_frontend(self):
         """
-        Starts the frontend of the app.
+        启动应用程序的前端.
         """
         self.state_manager.fe_auto_debug = True
         await self.ui.clear_main_logs()
@@ -75,7 +75,7 @@ class Frontend(FileDiffMixin, GitMixin, BaseAgent):
             ]
         )
         self.next_state.action = FE_START
-        await self.send_message("## Building the frontend\n\nThis may take a couple of minutes.")
+        await self.send_message("## 构建前端\n\n这可能需要几分钟时间.")
         await self.ui.send_project_stage({"stage": ProjectStage.FRONTEND_STARTED})
 
         await self.ui.set_important_stream(False)
@@ -116,13 +116,13 @@ class Frontend(FileDiffMixin, GitMixin, BaseAgent):
         self.state_manager.fe_auto_debug = True
         self.next_state.action = FE_CONTINUE
         await self.ui.send_project_stage({"stage": ProjectStage.CONTINUE_FRONTEND})
-        await self.send_message("### Continuing to build UI... This may take a couple of minutes")
+        await self.send_message("### 继续构建用户界面... 这可能需要几分钟时间")
 
         llm = self.get_llm(FRONTEND_AGENT_NAME, stream_output=True)
         convo = AgentConvo(self)
         convo.messages = self.current_state.epics[-1]["messages"]
         convo.user(
-            "Ok, now think carefully about your previous response. If the response ends by mentioning something about continuing with the implementation, continue but don't implement any files that have already been implemented. If your last response finishes with an incomplete file, implement that file and any other that needs implementation. Finally, if your last response doesn't end by mentioning continuing and if there isn't an unfinished file implementation, respond only with `DONE` and with nothing else."
+            "好的，现在仔细回想一下你之前的回复。如果该回复以提及继续实施某项内容结尾，那就继续，但不要实施任何已经实施过的文件。如果你的上一条回复以一个未完成的文件结尾，那就实施该文件以及其他任何需要实施的文件。最后，如果你的上一条回复没有以提及继续结尾，且没有未完成的文件需要实施，那么只需回复 'DONE'，其他什么都不用写。"
         )
 
         response = await llm(convo, parser=DescriptiveCodeBlockParser())
@@ -166,7 +166,7 @@ class Frontend(FileDiffMixin, GitMixin, BaseAgent):
         await self.ui.send_project_stage({"stage": ProjectStage.ITERATE_FRONTEND, "iteration_index": 1})
 
         if user_input:
-            await self.send_message("Errors detected, fixing...")
+            await self.send_message("检测到错误，正在修复...")
         else:
             answer = await self.ask_question(
                 "Do you want to change anything or report a bug?" if frontend_only else FE_CHANGE_REQ,
@@ -226,7 +226,7 @@ class Frontend(FileDiffMixin, GitMixin, BaseAgent):
 
             if answer.text:
                 user_input = answer.text
-                await self.send_message("Implementing the changes you suggested...")
+                await self.send_message("正在实施您建议的修改...")
 
         llm = self.get_llm(FRONTEND_AGENT_NAME)
 
@@ -264,7 +264,7 @@ class Frontend(FileDiffMixin, GitMixin, BaseAgent):
                                     error = e
                                 log.warning(f"Failed to fetch from RAG service: {error}")
                                 await self.send_message(
-                                    f"Couldn't find any relevant API documentation. Retrying... \nError: {error}"
+                                    f"找不到任何相关的 API 文档。正在重试... \nError: {error}"
                                 )
 
                     except Exception as e:
@@ -272,7 +272,7 @@ class Frontend(FileDiffMixin, GitMixin, BaseAgent):
                         capture_exception(e)
                         log.warning(f"Failed to fetch from RAG service: {e}", exc_info=True)
                 if error:
-                    await self.send_message(f"Please try reloading the project. \nError: {error}")
+                    await self.send_message(f"请尝试重新加载项目. \nError: {error}")
                     return None
 
         llm = self.get_llm(FRONTEND_AGENT_NAME, stream_output=True)
@@ -441,7 +441,7 @@ class Frontend(FileDiffMixin, GitMixin, BaseAgent):
                                     )
                                     continue
 
-                        await self.send_message(f"Running command: `{command}`...")
+                        await self.send_message(f"运行命令: `{command}`...")
                         await self.process_manager.run_command(command)
             else:
                 log.info(f"Unknown block description: {description}")
@@ -505,13 +505,13 @@ class Frontend(FileDiffMixin, GitMixin, BaseAgent):
                                     error = e
                                 log.warning(f"Failed to fetch from RAG service: {error}")
                                 await self.send_message(
-                                    f"I couldn't find any relevant API documentation. Retrying... \nError: {error}"
+                                    f"我找不到任何相关的 API 文档。正在重试... \nError: {error}"
                                 )
                     except Exception as e:
                         capture_exception(e)
-                        log.warning(f"Failed to fetch from RAG service: {e}", exc_info=True)
+                        log.warning(f"从 RAG 服务获取数据失败: {e}", exc_info=True)
                 if error:
-                    await self.send_message(f"Please try reloading the project. \nError: {error}")
+                    await self.send_message(f"请尝试重新加载项目. \nError: {error}")
                     return None
 
         return False
@@ -591,12 +591,12 @@ class Frontend(FileDiffMixin, GitMixin, BaseAgent):
             await self.kill_app()
 
             if diff_stdout or diff_stderr:
-                await self.send_message(f"### Auto-debugging found an error: \n{diff_stdout}\n{diff_stderr}")
-                log.debug(f"Auto-debugging output:\n{diff_stdout}\n{diff_stderr}")
-                return f"I got an error. Here are the logs:\n{diff_stdout}\n{diff_stderr}"
+                await self.send_message(f"### 自动调试发现了一个错误: \n{diff_stdout}\n{diff_stderr}")
+                log.debug(f"自动调试输出:\n{diff_stdout}\n{diff_stderr}")
+                return f"我遇到了一个错误。以下是日志:\n{diff_stdout}\n{diff_stderr}"
         except Exception as e:
             capture_exception(e)
             log.error(f"Error during auto-debugging: {e}", exc_info=True)
 
-        await self.send_message("### All good, no errors found.")
+        await self.send_message("### 一切正常，未发现错误.")
         return ""
